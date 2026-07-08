@@ -748,15 +748,17 @@ git commit -m "Day 1: setup environment and smoke test pipeline"
 ## 今日完成标准
 
 ```text
-[ ] 环境能 import torch/transformers/trl/peft/deepspeed
-[ ] smoke test 能跑通
-[ ] reports/smoke/summary.md 存在
-[ ] 能解释 HR@10 和 NDCG@10
-[ ] 完成 Day 1 commit
+[×] 环境能 import torch/transformers/trl/peft/deepspeed
+[√] smoke test 能跑通
+[√] reports/smoke/summary.md 存在
+[√ ] 能解释 HR@10 和 NDCG@10
+[√] 完成 Day 1 commit
 ```
 
 ## 今日问题记录
 
 ```text
-TODO: 记录安装失败、CUDA、依赖冲突、下载慢等问题。
+今天我理解了自己的项目和 `semantic-ids-llm` 的关系。两者的核心思想是一致的，都是把商品从普通 item_id 转成 Semantic ID，再把推荐任务改写成 LLM 生成任务。不同的是，参考项目使用了更完整的 RQ-VAE 和 Qwen3-8B 训练链路，而我当前项目先用层级 KMeans 和 smoke test 跑通最小闭环，更适合我作为入门和后续逐步扩展。
+
+我还理解了“长尾商品”的概念。长尾商品是指那些交互次数少、不热门的小众商品。推荐系统如果只会推热门商品，命中率可能不错，但推荐会很单一，也不利于平台覆盖更多商品。因此后续项目里除了 HR@10 和 NDCG@10，还要关注 Coverage 和 LongTailRatio，观察模型是否只能推热门商品，还是也能覆盖长尾商品。
 ```
