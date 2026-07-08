@@ -19,10 +19,11 @@
 ```bash
 python3 scripts/evaluate_llm.py \
   --config configs/default.yaml \
-  --model artifacts/checkpoints/qwen25-14b-genrec \
+  --model artifacts/checkpoints/qwen25-1p5b-onerec \
   --eval data/processed/main/instructions/sft_test.jsonl \
   --sid-map artifacts/main/sid_map.json \
-  --out reports/main/qwen25_14b_sft_eval.json \
+  --out reports/main/qwen25_1p5b_sft_eval.json \
+  --train-reference data/processed/main/instructions/sft_train.jsonl \
   --max-samples 1000
 ```
 
@@ -31,33 +32,40 @@ python3 scripts/evaluate_llm.py \
 ```bash
 python3 scripts/evaluate_llm.py \
   --config configs/default.yaml \
-  --model artifacts/checkpoints/qwen25-14b-genrec-grpo \
+  --model artifacts/checkpoints/qwen25-1p5b-onerec-grpo \
   --eval data/processed/main/instructions/sft_test.jsonl \
   --sid-map artifacts/main/sid_map.json \
-  --out reports/main/qwen25_14b_grpo_eval.json \
+  --out reports/main/qwen25_1p5b_grpo_eval.json \
+  --train-reference data/processed/main/instructions/sft_train.jsonl \
   --max-samples 1000
 ```
 
 ## 主结果表
 
-| 方法 | HR@10 | NDCG@10 | MRR@10 | Coverage@10 | Valid SID@10 |
+| 方法 | HR@10 | NDCG@10 | Coverage@10 | Novelty@10 | Valid SID@10 |
 |---|---:|---:|---:|---:|---:|
 | Popular | TODO | TODO | TODO | TODO | - |
 | Text Retrieval | TODO | TODO | TODO | TODO | - |
 | Embedding Retrieval | TODO | TODO | TODO | TODO | - |
-| Qwen2.5-14B SFT | TODO | TODO | TODO | TODO | TODO |
-| Qwen2.5-14B SFT + GRPO | TODO | TODO | TODO | TODO | TODO |
+| Qwen2.5-1.5B SFT | TODO | TODO | TODO | TODO | TODO |
+| Qwen2.5-1.5B SFT + GRPO | TODO | TODO | TODO | TODO | TODO |
 
 ## 消融实验
 
 | 实验 | HR@10 | NDCG@10 | 说明 |
 |---|---:|---:|---|
-| 无 Reasoning | TODO | TODO | 只生成 SID |
-| 有 Reasoning | TODO | TODO | 生成 SID + 理由 |
+| KMeans SID | TODO | TODO | 层级聚类 SID |
+| RQ-VAE-style SID | TODO | TODO | 残差量化 SID |
+| 无约束解码 | TODO | TODO | 可能出现非法 SID |
+| 有约束解码 | TODO | TODO | 限制到合法 SID 空间 |
 | SFT only | TODO | TODO | 监督微调 |
 | SFT + GRPO | TODO | TODO | 后训练优化 |
+| 无去偏奖励 | TODO | TODO | 不抑制热门偏置 |
+| 有去偏奖励 | TODO | TODO | 加 popularity bias penalty |
+| 无冷启动注入 | TODO | TODO | 普通 prompt |
+| 有冷启动注入 | TODO | TODO | 注入冷启动提示 |
 
-## 分群评测
+## 冷启动与分群评测
 
 | 用户类型 | HR@10 | NDCG@10 | 样本数 |
 |---|---:|---:|---:|
@@ -65,6 +73,7 @@ python3 scripts/evaluate_llm.py \
 | 中等用户，历史 6-20 | TODO | TODO | TODO |
 | 活跃用户，历史 >20 | TODO | TODO | TODO |
 | 长尾商品 | TODO | TODO | TODO |
+| 冷启动用户子集 | TODO | TODO | TODO |
 
 ## 案例分析
 

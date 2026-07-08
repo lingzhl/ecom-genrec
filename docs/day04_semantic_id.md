@@ -10,10 +10,11 @@
 - 商品文本 embedding。
 - KMeans 聚类。
 - 层级 Semantic ID。
+- RQ-VAE-style 残差量化 SID。
 
 ## 执行命令
 
-构建 SID：
+先构建 KMeans SID：
 
 ```bash
 python3 scripts/build_semantic_ids.py \
@@ -26,6 +27,15 @@ python3 scripts/build_semantic_ids.py \
 
 ```bash
 head -40 artifacts/all_beauty/sid_map.json
+```
+
+如果要补 OneRec 风格对照，再构建 RQ-VAE-style SID：
+
+```bash
+python3 scripts/build_rqvae_ids.py \
+  --config configs/default.yaml \
+  --items data/processed/all_beauty/items.jsonl \
+  --out artifacts/all_beauty/sid_map_rqvae.json
 ```
 
 重新构建 instruction：
@@ -56,6 +66,13 @@ SID 覆盖率：
 | duplicate_sid_count | TODO |
 | valid_mapping_rate | TODO |
 
+KMeans vs RQ-VAE-style：
+
+| Method | sid_count | valid_mapping_rate | codebook_usage | collapse_check |
+|---|---:|---:|---:|---|
+| KMeans SID | TODO | TODO | TODO | TODO |
+| RQ-VAE-style SID | TODO | TODO | TODO | TODO |
+
 示例：
 
 ```text
@@ -79,6 +96,13 @@ Semantic ID 的优势：
 - 方便计算 HR@K、NDCG@K。
 - 聚类编码比随机 item_id 更有语义结构。
 
+今天的实操顺序建议是：
+
+```text
+先做 KMeans SID 跑通
+再补 RQ-VAE-style SID 做对照
+```
+
 ## GitHub 产出
 
 ```bash
@@ -90,6 +114,7 @@ git commit -m "Day 4: build semantic item ids for constrained generation"
 
 ```text
 [ ] sid_map.json 已生成
+[ ] sid_map_rqvae.json 已生成或明确留到下一步
 [ ] sft_train.jsonl 已生成
 [ ] 所有训练样本 target 都能映射到合法 SID
 [ ] 能解释 Semantic ID 的作用

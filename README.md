@@ -1,13 +1,13 @@
 # 面向电商场景的生成式商品推荐系统
 
-This project implements a large-evaluation generative recommendation pipeline aligned with post-training / recommendation algorithm roles:
+This project implements a OneRec-style generative recommendation reproduction pipeline centered on Qwen2.5-1.5B:
 
 - Amazon Reviews 2023 multi-category sequence recommendation data.
-- Semantic item IDs for constrained generation.
+- Dual semantic ID paths: hierarchical KMeans SID and RQ-VAE-style residual quantization SID.
 - Popular, BM25/text, and embedding retrieval baselines.
-- Qwen2.5-14B LoRA SFT and TRL GRPO post-training.
-- Qwen2.5-32B scale evaluation entrypoint.
-- HR@K, NDCG@K, MRR@K, catalog coverage, valid SID rate, cold-user and long-tail reports.
+- Qwen2.5-1.5B multitask SFT and TRL GRPO post-training.
+- Cold-start subset evaluation, novelty, coverage, valid SID rate, and ablation-ready reports.
+- Post-10-day scale-up path for 7B/14B comparisons.
 
 ## Quick Smoke Test
 
@@ -38,7 +38,7 @@ Start here:
 - [Day 2：Amazon 数据处理](docs/day02_data.md)
 - [Day 3：Baseline + 指标](docs/day03_baseline.md)
 - [Day 4：Semantic ID 商品语义编码](docs/day04_semantic_id.md)
-- [Day 5：Qwen2.5-14B SFT](docs/day05_sft.md)
+- [Day 5：Qwen2.5-1.5B SFT](docs/day05_sft.md)
 - [Day 6：Reasoning 推荐解释](docs/day06_reasoning.md)
 - [Day 7：GRPO 后训练](docs/day07_grpo.md)
 - [Day 8：多类目大规模评测](docs/day08_large_eval.md)
@@ -89,6 +89,15 @@ python3 scripts/build_semantic_ids.py \
   --out artifacts/main/sid_map.json
 ```
 
+RQ-VAE-style residual quantization path:
+
+```bash
+python3 scripts/build_rqvae_ids.py \
+  --config configs/default.yaml \
+  --items data/processed/main/items.jsonl \
+  --out artifacts/main/sid_map_rqvae.json
+```
+
 ## Build SFT / GRPO Datasets
 
 ```bash
@@ -97,7 +106,8 @@ python3 scripts/build_instruction_data.py \
   --processed-dir data/processed/main \
   --sid-map artifacts/main/sid_map.json \
   --out-dir data/processed/main/instructions \
-  --with-reasoning
+  --with-reasoning \
+  --task-mix onerec
 ```
 
 ## Baseline and Metrics
@@ -110,7 +120,7 @@ python3 scripts/evaluate_baselines.py \
   --out reports/main/baselines.json
 ```
 
-## Qwen2.5-14B SFT
+## Qwen2.5-1.5B SFT
 
 ```bash
 accelerate launch --num_processes 2 --config_file configs/accelerate_zero2.yaml \
@@ -137,7 +147,7 @@ torchrun --nproc_per_node=2 scripts/train_grpo.py \
   --config configs/default.yaml \
   --train data/processed/main/instructions/grpo_train.jsonl \
   --sid-map artifacts/main/sid_map.json \
-  --sft-checkpoint artifacts/checkpoints/qwen25-14b-genrec \
+  --sft-checkpoint artifacts/checkpoints/qwen25-1p5b-onerec \
   --deepspeed configs/deepspeed_zero2.json
 ```
 
@@ -146,20 +156,21 @@ torchrun --nproc_per_node=2 scripts/train_grpo.py \
 ```bash
 python3 scripts/evaluate_llm.py \
   --config configs/default.yaml \
-  --model artifacts/checkpoints/qwen25-14b-genrec-grpo \
+  --model artifacts/checkpoints/qwen25-1p5b-onerec-grpo \
   --eval data/processed/main/instructions/sft_test.jsonl \
   --sid-map artifacts/main/sid_map.json \
-  --out reports/main/qwen25_14b_grpo_eval.json
+  --out reports/main/qwen25_1p5b_grpo_eval.json \
+  --train-reference data/processed/main/instructions/sft_train.jsonl
 ```
 
 ## Resume Bullet Template
 
 ```markdown
-### 面向电商场景的生成式商品推荐系统 | Qwen2.5-14B/32B, SFT, GRPO, Semantic ID
+### 面向电商场景的生成式商品推荐系统 | Qwen2.5-1.5B, KMeans/RQ-VAE SID, SFT, GRPO
 
-- 基于 Amazon Reviews 2023 多类目数据构建大规模电商序列推荐数据集，完成用户行为时间序列切分、商品元数据融合、长尾/冷启动用户分群评测，形成覆盖 HR@K、NDCG@K、MRR、Catalog Coverage、Valid SID Rate 的完整评测体系。
-- 设计层级商品语义 ID 表示方案，基于商品标题、类目和描述构建 embedding 聚类编码，将开放式商品文本生成转化为受约束商品 ID 生成，降低推荐幻觉并提升生成结果可控性。
-- 基于 Qwen2.5-14B-Instruct 进行 LoRA SFT，构造“用户历史行为 -> 推荐商品 SID + 推荐理由”的高质量指令数据，探索电商推荐场景下的 Reasoning/CoT 推荐解释能力。
-- 使用 TRL GRPO 进行模型后训练与偏好对齐，设计命中率、排序位置、类目一致性、合法 SID、多样性和推荐理由一致性等奖励函数，优化生成式推荐模型的命中率和稳定性。
-- 对比 Popular、Embedding Retrieval、SFT、SFT+GRPO、Qwen2.5-32B 等多组实验，并完成多类目、大测试集、冷启动用户、长尾商品和消融实验分析，为推荐效果优化提供数据支撑。
+- 基于 Amazon Reviews 2023 构建 OneRec 风格生成式推荐数据集，完成用户行为时间序列切分、冷启动用户分群评测与多类目扩展。
+- 设计 KMeans SID 与 RQ-VAE-style SID 双语义编码路径，将开放式商品生成转化为受约束商品 ID 生成，统计合法 SID 率与码本利用率。
+- 基于 Qwen2.5-1.5B-Instruct 进行三任务 SFT，覆盖序列推荐、特征对齐、历史融合，并加入约束解码减少非法 SID。
+- 使用 TRL GRPO 进行 7 类奖励后训练，覆盖 Hit、NDCG、Category、Valid SID、Diversity、Novelty、Reasoning，并补充去偏奖励与部分匹配奖励。
+- 输出 HR@10、NDCG@10、Catalog Coverage、Novelty、Valid SID Rate 以及冷启动子集指标，后续扩展到 7B/14B 做规模对比。
 ```

@@ -2,14 +2,14 @@
 
 ## 今日目标
 
-从单类目扩到 3 类目，形成更像 JD 的大数据评测。
+加入冷启动专项后，再从单类目扩到 3 类目，形成更像 OneRec 复现的主实验评测。
 
 ## 学习重点
 
 - 多类目训练的意义。
 - 单类目 vs 多类目泛化。
-- 14B 和 32B 的尺度对比。
-- 大模型实验如何控制变量。
+- 冷启动用户为什么要单独统计。
+- 为什么 7B/14B 要放到后续扩展阶段。
 
 ## 准备数据
 
@@ -37,13 +37,22 @@ python3 scripts/process_amazon.py \
   --out-dir data/processed/main
 ```
 
-构建 SID：
+构建 KMeans SID：
 
 ```bash
 python3 scripts/build_semantic_ids.py \
   --config configs/default.yaml \
   --items data/processed/main/items.jsonl \
   --out artifacts/main/sid_map.json
+```
+
+如果时间允许，再补 RQ-VAE-style SID：
+
+```bash
+python3 scripts/build_rqvae_ids.py \
+  --config configs/default.yaml \
+  --items data/processed/main/items.jsonl \
+  --out artifacts/main/sid_map_rqvae.json
 ```
 
 构建 instruction：
@@ -54,7 +63,8 @@ python3 scripts/build_instruction_data.py \
   --processed-dir data/processed/main \
   --sid-map artifacts/main/sid_map.json \
   --out-dir data/processed/main/instructions \
-  --with-reasoning
+  --with-reasoning \
+  --task-mix onerec
 ```
 
 跑 baseline：
@@ -84,17 +94,24 @@ python3 scripts/evaluate_baselines.py \
 | Text Retrieval | TODO | TODO | TODO | TODO |
 | Embedding Retrieval | TODO | TODO | TODO | TODO |
 
+冷启动子集：
+
+| Split | HR@10 | NDCG@10 | Sample Count |
+|---|---:|---:|---:|
+| cold_start_users | TODO | TODO | TODO |
+| non_cold_start_users | TODO | TODO | TODO |
+
 ## 今日技术理解
 
 多类目评测更接近真实电商场景，因为用户兴趣和商品语义不局限在单一类目。
 
-32B 对比建议只做 Day 8 之后的 scale eval，不阻塞 14B 主线。
+当前 10 天主线仍然只对 1.5B 负责。7B/14B 是后续扩展，不在今天阻塞主实验。
 
 ## GitHub 产出
 
 ```bash
 git add configs scripts src docs reports
-git commit -m "Day 8: scale to multi-category Amazon evaluation"
+git commit -m "Day 8: add cold-start and multi-category evaluation"
 ```
 
 ## 今日完成标准
@@ -102,8 +119,9 @@ git commit -m "Day 8: scale to multi-category Amazon evaluation"
 ```text
 [ ] 3 类目数据链路跑通
 [ ] reports/main/baselines.json 已生成
+[ ] 有一张冷启动子集结果表
 [ ] 记录单类目 vs 多类目规模差异
-[ ] 明确 32B 只作为对比，不阻塞主线
+[ ] 明确 7B/14B 只作为后续扩展，不阻塞主线
 [ ] 完成 Day 8 commit
 ```
 
