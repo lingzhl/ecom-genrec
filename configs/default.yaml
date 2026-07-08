@@ -1,0 +1,78 @@
+project:
+  name: ecom-genrec
+  seed: 42
+
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  artifacts_dir: artifacts
+  reports_dir: reports
+
+data:
+  categories:
+    - All_Beauty
+    - Baby_Products
+    - Sports_and_Outdoors
+  large_eval_categories:
+    - All_Beauty
+    - Baby_Products
+    - Sports_and_Outdoors
+    - Health_and_Household
+    - Electronics
+    - Home_and_Kitchen
+  min_user_interactions: 5
+  min_item_interactions: 5
+  max_history: 20
+  max_train_samples: 100000
+  cold_user_max_history: 5
+  long_tail_quantile: 0.8
+
+semantic_id:
+  embedding_model: BAAI/bge-small-en-v1.5
+  levels: 3
+  clusters_per_level: 32
+  sid_prefix: SID
+  batch_size: 128
+
+models:
+  sft_base: Qwen/Qwen2.5-14B-Instruct
+  scale_eval_base: Qwen/Qwen2.5-32B-Instruct
+  reasoning_eval_base: Qwen/Qwen3-32B
+
+training:
+  output_dir: artifacts/checkpoints/qwen25-14b-genrec
+  max_seq_length: 1024
+  bf16: true
+  lora_r: 32
+  lora_alpha: 64
+  lora_dropout: 0.05
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  learning_rate: 0.0001
+  num_train_epochs: 1
+  logging_steps: 10
+  save_steps: 500
+  eval_steps: 500
+  max_steps: -1
+
+grpo:
+  output_dir: artifacts/checkpoints/qwen25-14b-genrec-grpo
+  max_prompt_length: 768
+  max_completion_length: 256
+  num_generations: 4
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8
+  learning_rate: 0.00001
+  max_steps: 1000
+  rewards:
+    hit: 1.0
+    ndcg: 0.6
+    category: 0.3
+    valid_sid: 0.3
+    diversity: 0.2
+    reasoning: 0.2
+
+eval:
+  k_values: [5, 10, 20]
+  batch_size: 32
+  max_eval_samples: null
