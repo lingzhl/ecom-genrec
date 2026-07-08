@@ -60,6 +60,23 @@ def long_tail_ratio(pred_lists: Iterable[Sequence[str]], long_tail_items: Set[st
     return tail / max(1, total)  # 长尾推荐比例
 
 
+def novelty_at_k(
+    pred_lists: Iterable[Sequence[str]],
+    popularity: Dict[str, int],
+    k: int,
+) -> float:
+    """Novelty@K：推荐商品越不热门越新颖，采用 -log(popularity share) 的均值。"""
+    total = 0
+    score = 0.0
+    total_popularity = max(1, sum(popularity.values()))
+    for preds in pred_lists:
+        for item in list(preds)[:k]:
+            total += 1
+            prob = max(1, popularity.get(item, 0)) / total_popularity
+            score += -math.log2(prob)
+    return score / max(1, total)
+
+
 def category_consistency(  # 计算推荐商品和真实目标商品的类目一致性
     pred_lists: Iterable[Sequence[str]],  # 每个样本的 Top-K 推荐列表
     targets: Sequence[str],  # 每个样本的真实目标 SID
@@ -86,6 +103,7 @@ def evaluate_predictions(  # 统一评测入口
     valid_sids: Optional[Set[str]] = None,  # 合法 SID 集合，用于 ValidSID
     sid_to_item: Optional[Dict[str, JsonDict]] = None,  # SID -> metadata，用于类目一致性
     long_tail_items: Optional[Set[str]] = None,  # 长尾商品集合，用于 LongTailRatio
+    popularity: Optional[Dict[str, int]] = None,  # 商品热度，用于 Novelty
 ) -> JsonDict:  # 返回指标字典
     """对一组预测结果统一计算 HR/NDCG/MRR/Coverage/ValidSID 等指标。"""
     targets = [r["target_sid"] if "target_sid" in r else r["target_item"] for r in rows]  # 真实答案列表，优先用 target_sid
@@ -102,6 +120,8 @@ def evaluate_predictions(  # 统一评测入口
             result[f"CategoryConsistency@{k}"] = category_consistency(pred_lists, targets, sid_to_item, k)  # 计算类目一致性
         if long_tail_items is not None:  # 如果提供了长尾商品集合
             result[f"LongTailRatio@{k}"] = long_tail_ratio(pred_lists, long_tail_items, k)  # 计算长尾推荐比例
+        if popularity is not None:
+            result[f"Novelty@{k}"] = novelty_at_k(pred_lists, popularity, k)
     return {k: round(v, 6) if isinstance(v, float) else v for k, v in result.items()}  # 浮点数保留 6 位，方便写报告
 
 

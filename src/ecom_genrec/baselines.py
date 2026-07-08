@@ -5,7 +5,7 @@ import re  # 用正则做简单英文/数字分词
 from collections import Counter  # Counter 用于统计热门商品、词频、商品频次
 from typing import Dict, List, Sequence  # 常用类型注解
 
-from .metrics import evaluate_predictions  # 统一计算 HR/NDCG/MRR/Coverage/ValidSID 等指标
+from .metrics import evaluate_predictions, item_popularity  # 统一计算 HR/NDCG/MRR/Coverage/ValidSID 等指标
 from .utils import JsonDict, read_json, read_jsonl  # JSON/JSONL 读取工具
 
 
@@ -146,6 +146,7 @@ def evaluate_all_baselines(  # baseline 总入口
     _item_to_sid, sid_to_item = load_sid_map(sid_map_path)  # 加载 SID -> 商品信息，item_to_sid 此处不用
     catalog = set(sid_to_item)  # 商品全集，也就是所有合法 SID
     long_tail = long_tail_items_from_rows(train_rows)  # 根据训练集频次定义长尾商品
+    popularity = dict(item_popularity(train_rows))
     max_k = max(k_values)  # 三个 baseline 先生成最大的 K，再由指标函数切 @5/@10/@20
     methods = {  # 统一保存每个方法的预测结果
         "Popular": popular_predictions(train_rows, test_rows, max_k),  # 热门商品 baseline
@@ -161,6 +162,7 @@ def evaluate_all_baselines(  # baseline 总入口
             valid_sids=catalog,  # 合法 SID 集合，用于 ValidSID
             sid_to_item=sid_to_item,  # 商品信息，用于 CategoryConsistency
             long_tail_items=long_tail,  # 长尾商品集合，用于 LongTailRatio
+            popularity=popularity,  # 商品热度，用于 Novelty
         )
         for name, preds in methods.items()  # 遍历 Popular/Text/Embedding 三个 baseline
     }

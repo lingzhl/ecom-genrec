@@ -10,7 +10,8 @@ from typing import Any, Dict, List
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from ecom_genrec.instruction import extract_sids, load_sid_maps
-from ecom_genrec.utils import load_yaml
+from ecom_genrec.metrics import item_popularity
+from ecom_genrec.utils import load_yaml, read_jsonl
 
 
 def require_training_stack() -> None:
@@ -36,8 +37,20 @@ def normalize_completion(completion: Any) -> str:
     return str(completion)
 
 
-def make_reward_func(sid_to_item: Dict[str, Dict[str, Any]], weights: Dict[str, float]):
+def shared_prefix_length(a: str, b: str) -> int:
+    a_parts = a.split("_")
+    b_parts = b.split("_")
+    length = 0
+    for x, y in zip(a_parts, b_parts):
+        if x != y:
+            break
+        length += 1
+    return length
+
+
+def make_reward_func(sid_to_item: Dict[str, Dict[str, Any]], weights: Dict[str, float], popularity: Dict[str, int]):
     valid_sids = set(sid_to_item)
+    total_popularity = max(1, sum(popularity.values()))
 
     def reward_func(completions, target_sid=None, target_category=None, **kwargs):
         rewards: List[float] = []
@@ -53,12 +66,17 @@ def make_reward_func(sid_to_item: Dict[str, Dict[str, Any]], weights: Dict[str, 
                 rank = preds.index(target) + 1
                 reward += weights["hit"]
                 reward += weights["ndcg"] * (1.0 / math.log2(rank + 1))
+            elif preds:
+                reward += weights.get("partial_match", 0.0) * max(shared_prefix_length(preds[0], target) - 1, 0) / 4.0
             if preds and preds[0] in valid_sids:
                 reward += weights["valid_sid"]
             if preds:
                 pred_cat = sid_to_item.get(preds[0], {}).get("category", "")
                 if category and pred_cat == category:
                     reward += weights["category"]
+                popularity_prob = max(1, popularity.get(preds[0], 0)) / total_popularity
+                reward += weights.get("novelty", 0.0) * (-math.log2(popularity_prob) / 16.0)
+                reward -= weights.get("popularity_bias", 0.0) * popularity_prob
             if len(set(preds[:5])) >= min(5, len(preds)):
                 reward += weights["diversity"]
             if "推荐理由" in text and ("因为" in text or "因此" in text or "用户" in text):
@@ -90,6 +108,7 @@ def main() -> None:
     grpo_cfg = cfg["grpo"]
     train_cfg = cfg["training"]
     _item_to_sid, sid_to_item = load_sid_maps(args.sid_map)
+    popularity = dict(item_popularity(read_jsonl(args.train)))
     output_dir = args.output_dir or grpo_cfg["output_dir"]
 
     tokenizer = AutoTokenizer.from_pretrained(args.sft_checkpoint, trust_remote_code=True, use_fast=True)
@@ -112,7 +131,7 @@ def main() -> None:
         task_type="CAUSAL_LM",
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
     )
-    reward_func = make_reward_func(sid_to_item, grpo_cfg["rewards"])
+    reward_func = make_reward_func(sid_to_item, grpo_cfg["rewards"], popularity)
     args_grpo = GRPOConfig(
         output_dir=output_dir,
         max_prompt_length=int(grpo_cfg["max_prompt_length"]),

@@ -33,14 +33,24 @@ semantic_id:
   clusters_per_level: 32
   sid_prefix: SID
   batch_size: 128
+  methods:
+    - kmeans
+    - rqvae_style
+  rqvae_style:
+    codebook_size: 64
+    levels: 3
+    residual_weight_decay: 0.0
 
 models:
-  sft_base: Qwen/Qwen2.5-14B-Instruct
-  scale_eval_base: Qwen/Qwen2.5-32B-Instruct
-  reasoning_eval_base: Qwen/Qwen3-32B
+  sft_base: Qwen/Qwen2.5-1.5B-Instruct
+  scale_up:
+    - Qwen/Qwen2.5-7B-Instruct
+    - Qwen/Qwen2.5-14B-Instruct
+  scale_eval_base: Qwen/Qwen2.5-7B-Instruct
+  reasoning_eval_base: Qwen/Qwen2.5-1.5B-Instruct
 
 training:
-  output_dir: artifacts/checkpoints/qwen25-14b-genrec
+  output_dir: artifacts/checkpoints/qwen25-1p5b-onerec
   max_seq_length: 1024
   bf16: true
   lora_r: 32
@@ -56,7 +66,7 @@ training:
   max_steps: -1
 
 grpo:
-  output_dir: artifacts/checkpoints/qwen25-14b-genrec-grpo
+  output_dir: artifacts/checkpoints/qwen25-1p5b-onerec-grpo
   max_prompt_length: 768
   max_completion_length: 256
   num_generations: 4
@@ -70,9 +80,14 @@ grpo:
     category: 0.3
     valid_sid: 0.3
     diversity: 0.2
+    novelty: 0.2
     reasoning: 0.2
+    partial_match: 0.2
+    popularity_bias: 0.2
 
 eval:
   k_values: [5, 10, 20]
   batch_size: 32
   max_eval_samples: null
+  constrained_sid: true
+  cold_start_max_history: 5
