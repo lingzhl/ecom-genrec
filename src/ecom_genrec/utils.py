@@ -77,8 +77,14 @@ def set_seed(seed: int) -> None:
 
 def first_present(row: JsonDict, keys: List[str], default: Any = None) -> Any:
     for key in keys:
-        if key in row and row[key] not in (None, ""):
-            return row[key]
+        if key not in row:
+            continue
+        value = row[key]
+        if value in (None, ""):
+            continue
+        if isinstance(value, (list, dict)) and not value:
+            continue
+        return value
     return default
 
 
