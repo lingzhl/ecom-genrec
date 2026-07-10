@@ -55,9 +55,9 @@ cat reports/all_beauty/baselines.json
 
 | Method | HR@10 | NDCG@10 | MRR@10 | Coverage@10 |
 |---|---:|---:|---:|---:|
-| Popular | TODO | TODO | TODO | TODO |
-| Text Retrieval | TODO | TODO | TODO | TODO |
-| Embedding Retrieval | TODO | TODO | TODO | TODO |
+| Popular | 0.003937 | 0.001878 | 0.001203 | 0.020877 |
+| Text Retrieval | 0.027559 | 0.011699 | 0.006868 | 0.599165 |
+| Embedding Retrieval | 0.045932 | 0.019492 | 0.011755 | 0.797495 |
 
 ## 今日技术理解
 
@@ -89,11 +89,11 @@ git commit -m "Day 3: add recommendation baselines and metrics"
 ## 今日完成标准
 
 ```text
-[ ] 至少有 Popular 和 Text Retrieval 结果
-[ ] baselines.json 已生成
-[ ] 能解释 HR@10 和 NDCG@10 的区别
-[ ] 完成 Day 3 博客
-[ ] 完成 Day 3 commit
+[√] 至少有 Popular 和 Text Retrieval 结果
+[√] baselines.json 已生成
+[√] 能解释 HR@10 和 NDCG@10 的区别
+[√] 完成 Day 3 博客
+[√] 完成 Day 3 commit
 ```
 
 ## 今日问题记录
