@@ -1,0 +1,14 @@
+{
+  "sequence_train": 2244,
+  "history_fusion_train": 2244,
+  "sequence_valid": 357,
+  "history_fusion_valid": 357,
+  "sequence_test": 357,
+  "history_fusion_test": 357,
+  "feature_alignment_train": 431,
+  "feature_alignment_valid": 48,
+  "feature_alignment_test": 48,
+  "sft_train": 4919,
+  "sft_valid": 762,
+  "sft_test": 762
+}
