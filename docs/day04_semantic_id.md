@@ -150,12 +150,12 @@ git commit -m "Day 4: build semantic item ids for constrained generation"
 ## 今日完成标准
 
 ```text
-[x] sid_map.json 已生成
-[x] sid_map_rqvae.json 已生成或明确留到下一步
-[x] sft_train.jsonl 已生成
-[x] 所有训练样本 target 都能映射到合法 SID
-[x] 能解释 Semantic ID 的作用
-[x] 完成 Day 4 commit
+[√] sid_map.json 已生成
+[√] sid_map_rqvae.json 已生成或明确留到下一步
+[√] sft_train.jsonl 已生成
+[√] 所有训练样本 target 都能映射到合法 SID
+[√] 能解释 Semantic ID 的作用
+[√] 完成 Day 4 commit
 ```
 
 ## 今日问题记录

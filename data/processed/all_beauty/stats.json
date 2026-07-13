@@ -1,0 +1,12 @@
+{
+  "users": 357,
+  "items": 479,
+  "interactions": 3315,
+  "train_samples": 2244,
+  "valid_samples": 357,
+  "test_samples": 357,
+  "avg_history_len": 7.6106,
+  "categories": 2,
+  "sparse_user_ratio": 0.4706,
+  "long_tail_item_ratio": 0.8643
+}
