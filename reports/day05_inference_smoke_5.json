@@ -1,0 +1,37 @@
+{
+  "metrics": {
+    "samples": 5,
+    "HR@5": 0.0,
+    "NDCG@5": 0.0,
+    "MRR@5": 0.0,
+    "Coverage@5": 0.016701,
+    "ValidSID@5": 1.0,
+    "CategoryConsistency@5": 1.0,
+    "Novelty@5": 9.594192,
+    "HR@10": 0.0,
+    "NDCG@10": 0.0,
+    "MRR@10": 0.0,
+    "Coverage@10": 0.02714,
+    "ValidSID@10": 1.0,
+    "CategoryConsistency@10": 0.9,
+    "Novelty@10": 9.979215,
+    "HR@20": 0.0,
+    "NDCG@20": 0.0,
+    "MRR@20": 0.0,
+    "Coverage@20": 0.048017,
+    "ValidSID@20": 1.0,
+    "CategoryConsistency@20": 0.95,
+    "Novelty@20": 9.846201,
+    "model": "artifacts/checkpoints/qwen25-1p5b-onerec"
+  },
+  "cold_start_metrics": {
+    "samples": 0
+  },
+  "examples": [
+    "推荐商品：SID_029_029_029_028\n推荐理由：用户近期多次关注 All Beauty 相关商品，历史兴趣与 All Beauty 类目保持一致，因此推荐该商品作为下一步候选。",
+    "推荐商品：SID_029_029_029_030\n推荐理由：用户近期多次关注 All Beauty 相关商品，历史兴趣与 All Beauty 类目保持一致，因此推荐该商品作为下一步候选。",
+    "推荐商品：SID_012_012_012_007\n推荐理由：用户近期多次关注 All Beauty 相关商品，历史兴趣与 All Beauty 类目保持一致，因此推荐该商品作为下一步候选。",
+    "推荐商品：SID_029_029_029_009\n推荐理由：用户近期多次关注 All Beauty 相关商品，历史兴趣与 All Beauty 类目保持一致，因此推荐该商品作为下一步候选。",
+    "推荐商品：SID_029_029_029_030\n推荐理由：用户近期多次关注 All Beauty 相关商品，历史兴趣与 All Beauty 类目保持一致，因此推荐该商品作为下一步候选。"
+  ]
+}
