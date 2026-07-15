@@ -410,13 +410,13 @@ RawValidSIDRate 和 ValidSID@10 是否差距过大：有差距，RawValidSIDRate
 ## 今日完成标准
 
 ```text
-[x] reasoning 数据已生成
-[x] Day5 checkpoint 完成无约束 vs 有约束小样本对比
-[x] reasoning checkpoint 已训练或完成 debug 训练
-[x] reasoning checkpoint 能输出推荐商品和推荐理由
-[x] 至少记录一组无约束 vs 有约束解码对比
-[x] 至少记录 3 条成功案例和 2 条失败案例
-[x] 能解释推荐解释和真实推理的区别
-[x] 更新 RESULT_TABLES
-[x] 完成 Day 6 commit
+[√] reasoning 数据已生成
+[√] Day5 checkpoint 完成无约束 vs 有约束小样本对比
+[√] reasoning checkpoint 已训练或完成 debug 训练
+[√] reasoning checkpoint 能输出推荐商品和推荐理由
+[√] 至少记录一组无约束 vs 有约束解码对比
+[√] 至少记录 3 条成功案例和 2 条失败案例
+[√] 能解释推荐解释和真实推理的区别
+[√] 更新 RESULT_TABLES
+[√] 完成 Day 6 commit
 ```
