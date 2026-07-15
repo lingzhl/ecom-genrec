@@ -9,7 +9,8 @@
 | Popular | TBD | TBD | TBD | TBD | - |
 | Text/BM25 Retrieval | TBD | TBD | TBD | TBD | - |
 | Embedding Retrieval | TBD | TBD | TBD | TBD | - |
-| Qwen2.5-1.5B SFT | TBD | TBD | TBD | TBD | TBD |
+| Qwen2.5-1.5B SFT | 0.251969 | 0.235313 | 0.350731 | 10.028514 | 0.992913 |
+| Qwen2.5-1.5B SFT + reasoning | 0.250656 | 0.234000 | 0.386221 | 10.027931 | 1.000000 |
 | Qwen2.5-1.5B SFT + GRPO | TBD | TBD | TBD | TBD | TBD |
 
 ## 消融实验
@@ -19,12 +20,12 @@
 | 无 SID | TBD | TBD | 直接生成商品标题 |
 | KMeans SID | TBD | TBD | 层级聚类 SID |
 | RQ-VAE SID | TBD | TBD | 残差量化 SID |
-| SFT only | TBD | TBD | 监督微调 |
+| SFT only | 0.251969 | 0.235313 | Day5 full baseline，监督微调 |
 | SFT + GRPO | TBD | TBD | 后训练优化 |
-| 无 Reasoning | TBD | TBD | 只生成推荐 |
-| 有 Reasoning | TBD | TBD | 推荐 + 理由 |
-| 无约束解码 | TBD | TBD | 不限制非法 SID |
-| 有约束解码 | TBD | TBD | 只接受合法 SID |
+| 无 Reasoning | 0.251969 | 0.235313 | Day5 full baseline |
+| 有 Reasoning | 0.250656 | 0.234000 | Day6 full constrained，推荐 + 理由 |
+| 无约束解码 | 0.050000 | 0.026470 | Day6 200 条小样本，不限制非法 SID |
+| 有约束解码 | 0.050000 | 0.026470 | Day6 200 条小样本，合法 SID 后处理 |
 | 无去偏奖励 | TBD | TBD | 不抑制热门偏置 |
 | 有去偏奖励 | TBD | TBD | 加入 popularity bias penalty |
 | 无冷启动注入 | TBD | TBD | 只用 SID 历史 |
@@ -47,6 +48,17 @@
 | 基础 SFT | TBD | TBD | 不注入冷启动特征 |
 | 冷启动 prompt 注入 | TBD | TBD | 注入标题/类目摘要 |
 | 冷启动 + 去偏 GRPO | TBD | TBD | 去偏奖励 + 部分匹配奖励 |
+
+## Day 6 Reasoning / Decode Controls
+
+| Result Set | Model | Decode | Samples | HR@10 | NDCG@10 | Valid SID@10 | Raw Valid SID Rate | Reason Field Rate | Cold HR@10 |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Day5 full baseline | Qwen2.5-1.5B SFT | standard eval | 762 | 0.251969 | 0.235313 | 0.992913 | N/A | N/A | 0.395833 |
+| Day6 200 | Qwen2.5-1.5B SFT | unconstrained | 200 | 0.050000 | 0.026470 | 1.000000 | 1.000000 | 1.000000 | 0.064935 |
+| Day6 200 | Qwen2.5-1.5B SFT | constrained post-filter | 200 | 0.050000 | 0.026470 | 1.000000 | 1.000000 | 1.000000 | 0.064935 |
+| Day6 full | Qwen2.5-1.5B SFT + reasoning | constrained post-filter | 762 | 0.250656 | 0.234000 | 1.000000 | 0.938320 | 0.952756 | 0.395833 |
+
+说明：Day6 200 条小样本只用于验证无约束解析和有约束后处理链路，不和完整测试集直接比较。当前 constrained SID 是后处理过滤，不是生成阶段的 constrained decoding。
 
 ## 可写进简历的结果句式
 
