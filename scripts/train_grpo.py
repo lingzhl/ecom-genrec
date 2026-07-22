@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import importlib.util
 import math
 import os
@@ -93,6 +94,15 @@ def make_reward_func(sid_to_item: Dict[str, Dict[str, Any]], weights: Dict[str, 
     valid_sids = set(sid_to_item)
     total_popularity = max(1, sum(popularity.values()))
 
+    def batched_value(values: Any, idx: int, default: str = "") -> str:
+        if isinstance(values, list):
+            if not values:
+                return default
+            return str(values[idx % len(values)])
+        if values is None:
+            return default
+        return str(values)
+
     def reward_func(completions, target_sid=None, target_category=None, **kwargs):
         rewards: List[float] = []
         target_sid = target_sid or kwargs.get("target_sid") or []
@@ -100,8 +110,8 @@ def make_reward_func(sid_to_item: Dict[str, Dict[str, Any]], weights: Dict[str, 
         for idx, completion in enumerate(completions):
             text = normalize_completion(completion)
             preds = extract_sids(text)
-            target = target_sid[idx] if isinstance(target_sid, list) else target_sid
-            category = target_category[idx] if isinstance(target_category, list) else target_category
+            target = batched_value(target_sid, idx)
+            category = batched_value(target_category, idx)
             reward = 0.0
             if target in preds:
                 rank = preds.index(target) + 1
@@ -126,6 +136,18 @@ def make_reward_func(sid_to_item: Dict[str, Dict[str, Any]], weights: Dict[str, 
         return rewards
 
     return reward_func
+
+
+def make_grpo_config(config_cls: Any, **kwargs: Any) -> Any:
+    supported = set(inspect.signature(config_cls.__init__).parameters)
+    filtered = {key: value for key, value in kwargs.items() if key in supported}
+    skipped = sorted(set(kwargs) - set(filtered))
+    if skipped:
+        print(
+            "Current TRL GRPOConfig does not support these options; skipping: "
+            + ", ".join(skipped)
+        )
+    return config_cls(**filtered)
 
 
 def main() -> None:
@@ -180,7 +202,8 @@ def main() -> None:
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
     )
     reward_func = make_reward_func(sid_to_item, grpo_cfg["rewards"], popularity)
-    args_grpo = GRPOConfig(
+    args_grpo = make_grpo_config(
+        GRPOConfig,
         output_dir=output_dir,
         max_prompt_length=int(grpo_cfg["max_prompt_length"]),
         max_completion_length=int(grpo_cfg["max_completion_length"]),
