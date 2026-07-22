@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import math
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
@@ -12,6 +14,45 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from ecom_genrec.instruction import extract_sids, load_sid_maps
 from ecom_genrec.metrics import item_popularity
 from ecom_genrec.utils import load_yaml, read_jsonl
+
+
+def flash_attention_usable() -> tuple[bool, str | None]:
+    if importlib.util.find_spec("flash_attn") is None:
+        return False, "flash_attn is not installed"
+    try:
+        import torch
+        from flash_attn import flash_attn_func
+
+        if not torch.cuda.is_available():
+            return False, "CUDA is not available"
+        local_rank = int(os.environ.get("LOCAL_RANK", "0") or 0)
+        device = torch.device("cuda", local_rank % torch.cuda.device_count())
+        dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+        q = torch.randn(1, 16, 2, 64, device=device, dtype=dtype)
+        flash_attn_func(q, q, q, dropout_p=0.0, causal=True)
+        torch.cuda.synchronize(device)
+    except Exception as exc:
+        message = str(exc).splitlines()[0] if str(exc) else repr(exc)
+        return False, f"{type(exc).__name__}: {message}"
+    return True, None
+
+
+def select_attention_impl(requested: str) -> str:
+    if requested != "auto":
+        if requested == "flash_attention_2":
+            ok, reason = flash_attention_usable()
+            if not ok:
+                raise SystemExit(
+                    "flash_attention_2 was requested, but it cannot run in this environment: "
+                    f"{reason}\nUse --attn-implementation auto or --attn-implementation sdpa."
+                )
+        return requested
+
+    ok, reason = flash_attention_usable()
+    if ok:
+        return "flash_attention_2"
+    print(f"FlashAttention 2 unavailable or incompatible ({reason}); using PyTorch SDPA.")
+    return "sdpa"
 
 
 def require_training_stack() -> None:
@@ -95,6 +136,13 @@ def main() -> None:
     parser.add_argument("--sft-checkpoint", required=True)
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--deepspeed", default=None)
+    parser.add_argument("--max-steps", type=int, default=None)
+    parser.add_argument(
+        "--attn-implementation",
+        choices=["auto", "flash_attention_2", "sdpa", "eager"],
+        default="auto",
+        help="Attention backend. auto probes FlashAttention 2 and falls back to PyTorch SDPA.",
+    )
     args = parser.parse_args()
 
     require_training_stack()
@@ -118,7 +166,7 @@ def main() -> None:
         args.sft_checkpoint,
         torch_dtype="auto",
         trust_remote_code=True,
-        attn_implementation="flash_attention_2",
+        attn_implementation=select_attention_impl(args.attn_implementation),
     )
     model.config.use_cache = False
 
@@ -140,7 +188,7 @@ def main() -> None:
         per_device_train_batch_size=int(grpo_cfg["per_device_train_batch_size"]),
         gradient_accumulation_steps=int(grpo_cfg["gradient_accumulation_steps"]),
         learning_rate=float(grpo_cfg["learning_rate"]),
-        max_steps=int(grpo_cfg["max_steps"]),
+        max_steps=args.max_steps if args.max_steps is not None else int(grpo_cfg["max_steps"]),
         bf16=True,
         logging_steps=int(train_cfg["logging_steps"]),
         save_steps=int(train_cfg["save_steps"]),
